@@ -1,5 +1,10 @@
 <template>
   <v-container>
+
+    <v-app-bar>
+      <router-link to="/login" style="margin-left: 25px; text-decoration: none; color: #000">Login</router-link>
+    </v-app-bar>
+
     <v-data-table
       :headers="headers"
       :items="students"
@@ -44,49 +49,44 @@
                       sm="6"
                     >
                       <v-text-field
+                        v-model="editedItem.pwd"
+                        label="Password"
+                      ></v-text-field>
+                    </v-col>
+                    <v-col
+                      cols="12"
+                      md="4"
+                      sm="6"
+                    >
+                      <v-text-field
                         v-model="editedItem.name"
-                        label="Dessert name"
+                        label="Name"
                       ></v-text-field>
+                    </v-col>
+                    <v-col
+                      cols="12"
+                      md="4"
+                      sm="6">
+                      <v-radio-group v-model="editedItem.gender">
+                        <v-radio label="Male" value="male"></v-radio>
+                        <v-radio label="Female" value="female"></v-radio>
+                      </v-radio-group>
                     </v-col>
                     <v-col
                       cols="12"
                       md="4"
                       sm="6"
                     >
-                      <v-text-field
-                        v-model="editedItem.calories"
-                        label="Calories"
-                      ></v-text-field>
+                      <v-select v-model="editedItem.major"
+                        label="Select"
+                        :items="['IT', 'English', 'Frontend', 'Backend', 'Fullstack']"
+                      ></v-select>
                     </v-col>
                     <v-col
                       cols="12"
                       md="4"
-                      sm="6"
-                    >
-                      <v-text-field
-                        v-model="editedItem.fat"
-                        label="Fat (g)"
-                      ></v-text-field>
-                    </v-col>
-                    <v-col
-                      cols="12"
-                      md="4"
-                      sm="6"
-                    >
-                      <v-text-field
-                        v-model="editedItem.carbs"
-                        label="Carbs (g)"
-                      ></v-text-field>
-                    </v-col>
-                    <v-col
-                      cols="12"
-                      md="4"
-                      sm="6"
-                    >
-                      <v-text-field
-                        v-model="editedItem.protein"
-                        label="Protein (g)"
-                      ></v-text-field>
+                      sm="6">
+                      <v-date-picker></v-date-picker>
                     </v-col>
                   </v-row>
                 </v-container>
@@ -148,6 +148,10 @@
         </v-btn>
       </template>
     </v-data-table>
+
+    <v-text-field label="Enter ID for search" v-model="search_id"></v-text-field>
+    <v-btn @click="search()">Search</v-btn>
+
   </v-container>
 </template>
 
@@ -158,6 +162,8 @@ import api from '@/utils/api'
     name: "HelloWorld",
 
     data: () => ({
+      search_id: '',
+      loading: false,
       dialog: false,
       dialogDelete: false,
       headers: [
@@ -178,10 +184,10 @@ import api from '@/utils/api'
       editedIndex: -1,
       editedItem: {
         name: '',
-        calories: 0,
-        fat: 0,
-        carbs: 0,
-        protein: 0,
+        gender: 0,
+        major: 0,
+        dob: 0,
+        pwd: '',
       },
       defaultItem: {
         name: '',
@@ -253,14 +259,40 @@ import api from '@/utils/api'
         })
       },
 
-      save () {
-        if (this.editedIndex > -1) {
-          Object.assign(this.students[this.editedIndex], this.editedItem)
-        } else {
-          this.students.push(this.editedItem)
+      // save () {
+      //   if (this.editedIndex > -1) {
+      //     Object.assign(this.students[this.editedIndex], this.editedItem)
+      //   } else {
+      //     this.students.push(this.editedItem)
+      //   }
+      //   this.close()
+      // },
+
+        async save() {
+          console.log(this.editedItem.name, this.editedItem.gender);
+          const response = await api.save("std/save", {
+            name: this.editedItem.name,
+            gender: this.editedItem.gender,
+            major: this.editedItem.major,
+            pwd: this.editedItem.pwd,
+          });
+          if(response.status==201) {
+            this.initialize();
+          } else {
+            console.log("Something wrong")
+          }
+          this.close();
+        },
+        async search() {
+          const response = await api.get(`std/${this.search_id}`); // std/{id}
+          if(response.status==200) {
+            const data = await response.json();
+            console.log(data);
+            alert(data.name + " ( " + data.major + " )");
+          } else {
+            this.$router.push({path:'/error'})
+          }
         }
-        this.close()
-      },
     },
   }
 </script>

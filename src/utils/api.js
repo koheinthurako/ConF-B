@@ -9,6 +9,19 @@ async function get(path) {
     return resp;
 }
 
+async function save(path, body) {
+    const resp = await fetch (
+        domain+path, {
+            method: 'POST',
+            headers: {
+                "content-type": "application/json"
+            },
+            body: JSON.stringify(body)
+        });
+    return resp;
+}
+
 export default({
-    get
+    get,
+    save
 });
